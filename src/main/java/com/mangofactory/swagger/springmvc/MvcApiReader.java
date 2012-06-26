@@ -22,6 +22,15 @@ import com.wordnik.swagger.core.DocumentationEndPoint;
 import com.wordnik.swagger.core.DocumentationOperation;
 
 @Slf4j
+/**
+ * Reader which scans an ApplicationContext, looking for methods or
+ * classes annotated with <code>@RequestMapping</code>.
+ * 
+ * Discovered methods are then handed off to be introspected, and have their 
+ * corresponding documentation generated.
+ * @author martypitt
+ *
+ */
 public class MvcApiReader {
 
 	private final WebApplicationContext context;

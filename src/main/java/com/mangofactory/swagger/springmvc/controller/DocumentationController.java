@@ -19,6 +19,13 @@ import com.wordnik.swagger.core.Documentation;
 
 @Controller
 @RequestMapping("/apidoc")
+/**
+ * Entry-point controller, which responds to requests for documentation, and
+ * returns the Swagger compliant docummentation for declared @Controller s
+ *  
+ * @author martypitt
+ *
+ */
 public class DocumentationController implements InitializingBean {
 
 	private static final String CONTROLLER_ENDPOINT = "apidoc";
