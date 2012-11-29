@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.server.test.context.WebContextLoader;
@@ -36,7 +37,7 @@ public class MvcApiReaderTest {
 	{
 		Documentation resourceListing = controller.getResourceListing();
 		assertThat(resourceListing.getApis(),hasSize(1));
-		Documentation petsDocumentation = controller.getApiDocumentation("pets");
+		Documentation petsDocumentation = controller.getApiDocumentation("pets", new MockHttpServletRequest());
 		assertThat(petsDocumentation, is(notNullValue()));
 		DocumentationEndPoint documentationEndPoint = resourceListing.getApis().get(0);
 		assertEquals("resources/pets" ,documentationEndPoint.getPath());
@@ -45,7 +46,8 @@ public class MvcApiReaderTest {
 	@Test
 	public void findsExpectedMethods()
 	{
-		ControllerDocumentation petsDocumentation = controller.getApiDocumentation("pets");
+		ControllerDocumentation petsDocumentation = controller.getApiDocumentation("pets", new MockHttpServletRequest());
+        System.out.println(petsDocumentation.getEndPoint("/pets/{petId}",RequestMethod.GET));
 		DocumentationOperation operation = petsDocumentation.getEndPoint("/pets/{petId}",RequestMethod.GET);
 		assertThat(operation, is(notNullValue()));
 		assertThat(operation.getParameters(),hasSize(1));

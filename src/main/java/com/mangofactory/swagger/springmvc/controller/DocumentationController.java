@@ -16,6 +16,9 @@ import com.mangofactory.swagger.ControllerDocumentation;
 import com.mangofactory.swagger.SwaggerConfiguration;
 import com.mangofactory.swagger.springmvc.MvcApiReader;
 import com.wordnik.swagger.core.Documentation;
+import org.springframework.web.servlet.HandlerMapping;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping('/' + DocumentationController.CONTROLLER_ENDPOINT)
@@ -40,13 +43,27 @@ public class DocumentationController implements InitializingBean {
 	@RequestMapping(method=RequestMethod.GET, produces="application/json")
 	public @ResponseBody Documentation getResourceListing()
 	{
-		return apiReader.getResourceListing();
+        Documentation documentation = apiReader.getResourceListing();
+        String path = basePath + "/" + CONTROLLER_ENDPOINT + "/";
+        documentation.setBasePath(path);
+		return documentation;
 	}
 	
-	@RequestMapping(value="/{apiName}",method=RequestMethod.GET, produces="application/json")
-	public @ResponseBody ControllerDocumentation getApiDocumentation(@PathVariable("apiName") String apiName)
+	@RequestMapping(value="/{apiName}/**",method=RequestMethod.GET, produces="application/json")
+	public @ResponseBody ControllerDocumentation getApiDocumentation(@PathVariable("apiName") String apiName, HttpServletRequest request)
 	{
-		return apiReader.getDocumentation(apiName);
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        if(path == null){
+            path = "";
+        }
+        else{
+            StringBuilder builder = new StringBuilder(path);
+            int start = path.indexOf(DocumentationController.CONTROLLER_ENDPOINT);
+            //remove the start of the path including the swagger resources part
+            builder = builder.delete(0, start + DocumentationController.CONTROLLER_ENDPOINT.length() + 1);
+            path = builder.toString();
+        }
+		return apiReader.getDocumentation(path);
 	}
 
 	// TODO : 

@@ -37,7 +37,7 @@ public class MvcApiReader {
 	
 	private final Map<Class<?>,DocumentationEndPoint> resourceListCache = Maps.newHashMap();
 	private final Map<Class<?>,ControllerDocumentation> apiCache = Maps.newHashMap();
-    
+
 	private static final List<RequestMethod> allRequestMethods = 
 			Arrays.asList( RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT );
 	
@@ -103,11 +103,13 @@ public class MvcApiReader {
 	}
 
 	private ControllerDocumentation getApiDocumentation(MvcApiResource resource) {
+
 		if (!apiCache.containsKey(resource.getControllerClass()))
 		{
 			ControllerDocumentation emptyApiDocumentation = resource.createEmptyApiDocumentation();
-			if (emptyApiDocumentation != null)
+			if (emptyApiDocumentation != null){
 				apiCache.put(resource.getControllerClass(),emptyApiDocumentation);
+            }
 		}
 		return apiCache.get(resource.getControllerClass());
 	}
@@ -139,7 +141,7 @@ public class MvcApiReader {
 
 	public ControllerDocumentation getDocumentation(
 			String apiName) {
-		
+
 		for (ControllerDocumentation documentation : apiCache.values())
 		{
 			if (documentation.matchesName(apiName))
