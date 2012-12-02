@@ -1,11 +1,14 @@
 package com.mangofactory.swagger.springmvc.controller;
 
+import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,7 +22,9 @@ import com.wordnik.swagger.core.Documentation;
 import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
+@Slf4j
 @Controller
 @RequestMapping('/' + DocumentationController.CONTROLLER_ENDPOINT)
 public class DocumentationController implements InitializingBean {
@@ -30,8 +35,13 @@ public class DocumentationController implements InitializingBean {
 	private String apiVersion = "1.0";
 	@Getter @Setter
 	private String swaggerVersion = "1.1";
-	
-	@Getter @Setter
+
+    // By default all the packages are scanned for documentation, if set only the specified packages are read
+    // e.g. Lists.newArrayList("com.mangofactory.swagger.springmvc.test");
+    @Getter @Setter
+    private List<String> swaggerPackages = null;
+
+    @Getter @Setter
 	private String basePath = "/";
 	
 	@Autowired
@@ -48,21 +58,13 @@ public class DocumentationController implements InitializingBean {
         documentation.setBasePath(path);
 		return documentation;
 	}
-	
-	@RequestMapping(value="/{apiName}/**",method=RequestMethod.GET, produces="application/json")
-	public @ResponseBody ControllerDocumentation getApiDocumentation(@PathVariable("apiName") String apiName, HttpServletRequest request)
+
+    @RequestMapping(value="/**",method=RequestMethod.GET, produces="application/json")
+    public @ResponseBody ControllerDocumentation getApiDocumentation(HttpServletRequest request)
 	{
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        if(path == null){
-            path = "";
-        }
-        else{
-            StringBuilder builder = new StringBuilder(path);
-            int start = path.indexOf(DocumentationController.CONTROLLER_ENDPOINT);
-            //remove the start of the path including the swagger resources part
-            builder = builder.delete(0, start + DocumentationController.CONTROLLER_ENDPOINT.length() + 1);
-            path = builder.toString();
-        }
+        String pattern = (String)request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        String path = new AntPathMatcher().extractPathWithinPattern(pattern, request.getServletPath());
+
 		return apiReader.getDocumentation(path);
 	}
 
@@ -77,7 +79,7 @@ public class DocumentationController implements InitializingBean {
 			documentationBasePath += "/";
 //		documentationBasePath += CONTROLLER_ENDPOINT;
 		
-		SwaggerConfiguration config = new SwaggerConfiguration(apiVersion,swaggerVersion,documentationBasePath);
+		SwaggerConfiguration config = new SwaggerConfiguration(apiVersion,swaggerVersion,documentationBasePath, swaggerPackages);
 		apiReader = new MvcApiReader(wac, config);
 	}
 	

@@ -8,6 +8,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public class ApiMethodReader {
 	private final List<DocumentationParameter> parameters = Lists.newArrayList();
 
 	public ApiMethodReader(HandlerMethod handlerMethod) {
-		this.handlerMethod = handlerMethod;
+        this.handlerMethod = handlerMethod;
 		documentOperation();
 		documentParameters();
 		documentExceptions();
@@ -136,21 +137,36 @@ public class ApiMethodReader {
   }
 
   private String selectBestParameterName(MethodParameter methodParameter) {
-		ApiParam apiParam = methodParameter.getParameterAnnotation(ApiParam.class);
-		if (apiParam != null && !StringUtils.isEmpty(apiParam.name()))
-			return apiParam.name();
-		PathVariable pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
-		if (pathVariable != null && !StringUtils.isEmpty(pathVariable.value()))
-			return pathVariable.value();
+	    ApiParam apiParam = methodParameter.getParameterAnnotation(ApiParam.class);
+	    if (apiParam != null && !StringUtils.isEmpty(apiParam.name()))
+            return apiParam.name();
+
+        PathVariable pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
+		if (pathVariable != null){
+            if(!StringUtils.isEmpty(pathVariable.value())){
+                return pathVariable.value();
+            }
+            // If there is only one path variable, spring doesn't require that parameter to be named
+            // if the parameter is a path parameter and it isn't named we have the get the name using a different method
+            else{
+                LocalVariableTableParameterNameDiscoverer lvtpnd = new LocalVariableTableParameterNameDiscoverer();
+                String[] parameterNames = lvtpnd.getParameterNames(methodParameter.getMethod());
+                if(parameterNames.length > 0){
+                    return parameterNames[0];
+                }
+            }
+        }
+
 		ModelAttribute modelAttribute = methodParameter.getParameterAnnotation(ModelAttribute.class);
 		if (modelAttribute != null && !StringUtils.isEmpty(modelAttribute.value()))
 			return modelAttribute.value();
-		RequestParam requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
+
+        RequestParam requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
 		if (requestParam != null && !StringUtils.isEmpty(requestParam.value()))
 			return requestParam.value();
+
 		// Default
 		return methodParameter.getParameterName();
-		
 	}
 
 	private void generateDefaultParameterDocumentation(

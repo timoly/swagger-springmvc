@@ -22,6 +22,7 @@ import com.wordnik.swagger.core.Documentation;
 import com.wordnik.swagger.core.DocumentationEndPoint;
 import com.wordnik.swagger.core.DocumentationOperation;
 import com.wordnik.swagger.core.DocumentationParameter;
+import org.springframework.web.servlet.HandlerMapping;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
@@ -37,7 +38,8 @@ public class MvcApiReaderTest {
 	{
 		Documentation resourceListing = controller.getResourceListing();
 		assertThat(resourceListing.getApis(),hasSize(1));
-		Documentation petsDocumentation = controller.getApiDocumentation("pets", new MockHttpServletRequest());
+        MockHttpServletRequest request = createRequestMock("pets");
+        ControllerDocumentation petsDocumentation = controller.getApiDocumentation(request );
 		assertThat(petsDocumentation, is(notNullValue()));
 		DocumentationEndPoint documentationEndPoint = resourceListing.getApis().get(0);
 		assertEquals("resources/pets" ,documentationEndPoint.getPath());
@@ -46,8 +48,8 @@ public class MvcApiReaderTest {
 	@Test
 	public void findsExpectedMethods()
 	{
-		ControllerDocumentation petsDocumentation = controller.getApiDocumentation("pets", new MockHttpServletRequest());
-        System.out.println(petsDocumentation.getEndPoint("/pets/{petId}",RequestMethod.GET));
+        MockHttpServletRequest request = createRequestMock("pets");
+		ControllerDocumentation petsDocumentation = controller.getApiDocumentation(request );
 		DocumentationOperation operation = petsDocumentation.getEndPoint("/pets/{petId}",RequestMethod.GET);
 		assertThat(operation, is(notNullValue()));
 		assertThat(operation.getParameters(),hasSize(1));
@@ -62,4 +64,11 @@ public class MvcApiReaderTest {
 		operation = petsDocumentation.getEndPoint("/pets/allMethodsAllowed", RequestMethod.PUT);
 		assertThat(operation, is(notNullValue()));
 	}
+
+    private MockHttpServletRequest createRequestMock(String path){
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, "/" + DocumentationController.CONTROLLER_ENDPOINT + "/**");
+        request.setServletPath("/" + DocumentationController.CONTROLLER_ENDPOINT + "/" + path);
+        return request;
+    }
 }

@@ -28,7 +28,7 @@ import com.wordnik.swagger.core.DocumentationOperation;
 public class MvcApiReader {
 
 	private final WebApplicationContext context;
-	private final SwaggerConfiguration config;
+    private final SwaggerConfiguration config;
 	@Getter
 	private Map<String, HandlerMapping> handlerMappingBeans;
 	
@@ -51,7 +51,7 @@ public class MvcApiReader {
 	
 	private void buildMappingDocuments() {
 		resourceListing = config.newDocumentation();
-		
+
 		log.debug("Discovered {} candidates for documentation",handlerMappingBeans.size());
 		for (HandlerMapping handlerMapping : handlerMappingBeans.values())
 		{
@@ -79,11 +79,21 @@ public class MvcApiReader {
 	}
 
 	private void processMethod(RequestMappingHandlerMapping handlerMapping) {
+        String classPackage;
+        List<String> swaggerPackages = config.getSwaggerPackages();
+
 		for (Entry<RequestMappingInfo, HandlerMethod> entry : handlerMapping.getHandlerMethods().entrySet()) {
 			HandlerMethod handlerMethod = entry.getValue();
 			RequestMappingInfo mappingInfo = entry.getKey();
-			
+
 			MvcApiResource resource = new MvcApiResource(handlerMethod,config);
+            classPackage = resource.getControllerClass().getPackage().getName();
+
+            // Only allow whitelisted packages if the swaggerPackages variable is set
+            if(swaggerPackages != null && !swaggerPackages.contains(classPackage)){
+                log.debug("package {} isn't included in the package whitelist", classPackage);
+                continue;
+            }
 			
 			// Don't document our own controllers
 			if (resource.isInternalResource())
@@ -139,8 +149,7 @@ public class MvcApiReader {
 		}
 	}
 
-	public ControllerDocumentation getDocumentation(
-			String apiName) {
+	public ControllerDocumentation getDocumentation(String apiName) {
 
 		for (ControllerDocumentation documentation : apiCache.values())
 		{

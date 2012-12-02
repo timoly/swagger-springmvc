@@ -26,7 +26,7 @@ public class PetService {
 		)
 	@com.mangofactory.swagger.ApiErrors(NotFoundException.class)
 	public Pet getPetById (
-			@ApiParam(value = "ID of pet that needs to be fetched",  allowableValues = "range[1,5]", required = true) @PathVariable("petId") String petId) 
+			@ApiParam(value = "ID of pet that needs to be fetched",  allowableValues = "range[1,5]", required = true) @PathVariable("petId") String petId)
 	throws NotFoundException {
 		throw new NotImplementedException();
 	}
@@ -58,7 +58,7 @@ public class PetService {
 	}
 
 	@RequestMapping(value="/findByTags",method=RequestMethod.GET)
-	@ApiOperation(value = "Finds Pets by tags", notes = "Muliple tags can be provided with comma seperated strings. Use tag1, tag2, tag3 for testing.", responseClass = "com.wordnik.swagger.sample.model.Pet", multiValueResponse = true)
+	@ApiOperation(value = "Finds Pets by tags", notes = "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.", responseClass = "com.wordnik.swagger.sample.model.Pet", multiValueResponse = true)
 	@ApiErrors(value = { @ApiError(code = 400, reason = "Invalid tag value") })
 	@Deprecated
 	public void findPetsByTags(
